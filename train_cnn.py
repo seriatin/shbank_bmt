@@ -12,7 +12,7 @@ import os
 import pickle
 import tensorflow as tf
 from args import bmt_args
-from utils import concat_timestamp, create_export_dir
+from utils import concat_timestamp, create_export_dir, tar
 
 if __name__ == '__main__':
     parser = bmt_args()
@@ -156,5 +156,7 @@ with tf.Session() as sess:
                                       keep_prob: 1.0}))
 
     print("Export Serving Model!")
-    export_dir = create_export_dir(args.export_dir, args.model_name)
-    tf.saved_model.simple_save(sess, concat_timestamp(export_dir), inputs={"image": X}, outputs={'classes': Y})
+    export_base_dir = create_export_dir(args.export_dir, args.model_name)
+    export_dir = concat_timestamp(export_base_dir)
+    tf.saved_model.simple_save(sess, export_dir, inputs={"image": X}, outputs={'classes': Y})
+    tar(export_base_dir, export_dir, args.model_name)
