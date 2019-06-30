@@ -3,6 +3,9 @@ import datetime
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 from tensorflow.python.client import device_lib
+from args import bmt_args
+from utils import concat_timestamp, create_export_dir, tar
+
 
 
 def check_available_gpus():
@@ -47,10 +50,12 @@ def model(X, reuse=False):
 
 
 if __name__ == '__main__':
+    parser = bmt_args()
+    args = parser.parse_args()
     # need to change learning rates and batch size by number of GPU
     batch_size = 10000
     learning_rate = 0.001
-    total_epoch = 10
+    total_epoch = args.epochs
 
     gpu_num = check_available_gpus()
 
@@ -113,3 +118,8 @@ if __name__ == '__main__':
     print("--- Training time : {0} seconds /w {1} GPUs ---".format(
         datetime.datetime.now() - start_time, gpu_num))
 
+    print("Export Serving Model!")
+    export_base_dir = create_export_dir(args.export_dir, args.model_name)
+    export_dir = concat_timestamp(export_base_dir)
+    tf.saved_model.simple_save(sess, export_dir, inputs={"image": X}, outputs={'classes': Y})
+    tar(export_base_dir, export_dir, args.model_name)
