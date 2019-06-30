@@ -2,6 +2,7 @@ import os
 import time
 import sys
 import subprocess
+import tensorflow as tf
 
 def create_export_dir(export_dir, model_name):
 
@@ -34,4 +35,16 @@ def tar(export_base_dir, export_dir, model_name):
             cwd=cwd)
         out, err = proc.communicate()
         print(out)
-  
+
+
+PS_OPS = ['Variable', 'VariableV2', 'AutoReloadVariable']
+
+def assign_to_device(device, ps_device='/cpu:0'):
+    def _assign(op):
+        node_def = op if instance(op, tf.NodeDef) else op.node_def
+        if node_def.op in PS_OPS:
+            return "/" + ps_device
+        else:
+            return device
+    return _assign
+
